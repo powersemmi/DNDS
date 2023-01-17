@@ -1,0 +1,50 @@
+[project]
+name = "dnd_server"
+version = "0.0.1"
+description = "DND Viewer backend"
+authors = [
+    {name = "Чеботарёв Виктор", email = "powersemmi@gmail.com"},
+]
+dependencies = [
+    "fastapi[all]>=0.89.1",
+    "pydantic>=1.10.4",
+    "hypercorn[h3]>=0.14.3",
+    "sqlalchemy[asyncio]>=1.4.46",
+    "asyncpg>=0.27.0",
+]
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "isort>=5.11.4",
+    "pytest>=7.2.1",
+    "black>=22.12.0",
+    "flake8>=6.0.0",
+    "pyproject-flake8>=6.0.0.post1",
+]
+
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.flake8]
+ignore = ["W291", "E203", "W503", "E731"]
+exclude = [
+    ".git",
+    "__pycashe__",
+    "docs",
+    "build",
+    "dist",
+    ".venv",
+    "__pypackeges__"
+]
+max-line-length = 79
+count = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
