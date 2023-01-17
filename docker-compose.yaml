@@ -1,0 +1,39 @@
+version: "3.9"
+
+networks:
+  shared: { }
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d dnd"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+      POSTGRES_DB: dnd
+      POSTGRES_HOST_AUTH_METHOD: trust
+    networks: [ shared ]
+    volumes:
+      - type: bind
+        source: ./.conf/postgres/postgresql.conf
+        target: /etc/postgresql.conf
+    ports:
+      - "5432:5432"
+  back:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+    environment:
+      - BIND=0.0.0.0:8080
+      - DEBUG=False
+      - DB_URL=postgres://test:test@postgres:5432/dnd
+    networks: [ shared ]
+    ports:
+      - "8080:8080"
+    command: bash -c "python -m alembic upgrade head && python -m dnd"
