@@ -1,3 +1,5 @@
+from typing import Self
+
 from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,20 +10,16 @@ from dnd.database.models.base import BaseSchema
 
 class Map(BaseSchema):
     __tablename__ = "maps"
-    gameset_meta_id = Column(
-        BigInteger,
-        ForeignKey("gamesets_meta.id"),
-        primary_key=True,
-        nullable=False,
-        unique=True,
-        index=True,
+    user_id: int = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    gameset_meta_id: int = Column(
+        BigInteger, ForeignKey("gamesets_meta.id"), nullable=False
     )
-    meta = relationship("MapMeta", backref="maps", uselist=False)
+    meta = relationship("MapMeta", backref="map", uselist=False)
 
     @classmethod
     async def create(
         cls, session: AsyncSession, gameset_meta_id: int, meta: "MapMeta"
-    ):
+    ) -> Self:
         return await cls._create(
             gameset_meta_id=gameset_meta_id, meta=meta, session=session
         )
@@ -29,18 +27,14 @@ class Map(BaseSchema):
 
 class MapMeta(BaseSchema):
     __tablename__ = "maps_meta"
-    id = Column(
+    map_id = Column(
         BigInteger,
-        ForeignKey(Map.id),
-        primary_key=True,
-        nullable=False,
-        unique=True,
-        index=True,
+        ForeignKey("maps.id"),
     )
-    name: str = Column(String(256), nullable=False, index=True)
+    name: str = Column(String(256), nullable=False)
     len_x: int = Column(Integer, nullable=False)
     len_y: int = Column(Integer, nullable=False)
-    image: bytes | None = Column(BYTEA, nullable=True)
+    image: bytes | None = Column(BYTEA)
 
     @classmethod
     async def create(
@@ -51,7 +45,7 @@ class MapMeta(BaseSchema):
         len_x: int,
         len_y: int,
         image: bytes,
-    ):
+    ) -> Self:
         return await cls._create(
             map_id=map_id,
             name=name,

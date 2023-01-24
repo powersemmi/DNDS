@@ -1,11 +1,14 @@
 from datetime import datetime, timedelta
 
+from hashids import Hashids
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from dnd.settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+hashids = Hashids(salt=settings.SECRET_KEY, min_length=6)
 
 
 class Hasher:
@@ -42,3 +45,7 @@ class Hasher:
             algorithm=settings.ALGORITHM,
         )
         return encoded_jwt
+
+
+async def get_shortcut():
+    yield hashids

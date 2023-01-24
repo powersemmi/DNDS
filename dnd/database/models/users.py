@@ -18,7 +18,7 @@ class User(BaseSchema):
     username: str = Column(
         String(256), nullable=False, unique=True, index=True
     )
-    full_name: str = Column(String(256))
+    full_name: str | None = Column(String(256))
     email: str = Column(String(320), nullable=False, unique=True)
 
     _hashed_password: bytes = Column("hashed_password", BYTEA, nullable=False)
@@ -36,16 +36,16 @@ class User(BaseSchema):
         cls,
         session: AsyncSession,
         username: str,
-        full_name: str,
         email: str,
         password: str,
-    ):
+        full_name: str | None = None,
+    ) -> Self:
         return await cls._create(
+            session=session,
             username=username,
             full_name=full_name,
             password=password,
             email=email,
-            session=session,
         )
 
     @classmethod

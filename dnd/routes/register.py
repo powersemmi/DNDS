@@ -8,7 +8,7 @@ from dnd.database.db import get_db
 from dnd.database.models.users import User
 from dnd.models import auth
 
-router = APIRouter(prefix="/register")
+router = APIRouter(prefix="/register", tags=["auth"])
 
 
 class ConflictError(BaseModel):
@@ -21,7 +21,6 @@ class SuccessMessage(BaseModel):
 
 @router.put(
     "/",
-    tags=["auth"],
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {"model": SuccessMessage},

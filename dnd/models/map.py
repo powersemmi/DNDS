@@ -2,11 +2,16 @@ from pydantic import BaseModel
 
 
 class MapMetaModel(BaseModel):
-    px: int = 0
-    py: int = 0
-    image: bytes or None
+    len_x: int = 0
+    len_y: int = 0
+    image: bytes | None
+
+    class Config:
+        orm_mode = True
 
 
 class MapModel(BaseModel):
-    id: int
     meta: MapMetaModel
+
+    class Config:
+        orm_mode = True

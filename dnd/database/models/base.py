@@ -8,23 +8,27 @@ from sqlalchemy.orm import declarative_base
 
 Base: TypeAlias = declarative_base()
 
+metadata = Base.metadata
+
 
 class BaseSchema(Base):
     __abstract__ = True
 
-    id = Column(
+    id: int = Column(
         BigInteger, Identity(always=True), primary_key=True, nullable=False
     )
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
+    created_at: datetime = Column(
+        TIMESTAMP(timezone=True), server_default=func.now()
+    )
+    updated_at: datetime = Column(
         TIMESTAMP(timezone=True),
         server_default=func.now(),
         onupdate=datetime.utcnow,
     )
 
     @classmethod
-    async def _create(cls, session: AsyncSession, **kwargs):
-        obj = cls(kwargs)
+    async def _create(cls, session: AsyncSession, **kwargs) -> Self:
+        obj = cls(**kwargs)
         session.add(obj)
         await session.flush()
         return obj

@@ -1,6 +1,8 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
-from dnd.models.auth import UserModel
+from dnd.models.auth import UserInfoModel
 from dnd.models.map import MapModel
 from dnd.models.pawn import PawnModel
 
@@ -8,18 +10,26 @@ from dnd.models.pawn import PawnModel
 class GameSetPlayerPositionModel(BaseModel):
     x: int
     y: int
-    map_id: int
-    pawn_id: int
+    pawn: PawnModel
+
+    class Config:
+        orm_mode = True
 
 
 class GameSetMetaModel(BaseModel):
-    current_map_id: int
-    pawns: list[PawnModel]
-    maps: list[MapModel]
-    pawns_position: dict[int, GameSetPlayerPositionModel]
+    pawns: list[Optional[PawnModel]]
+    maps: list[Optional[MapModel]]
+    pawns_position: list[Optional[GameSetPlayerPositionModel]]
+
+    class Config:
+        orm_mode = True
 
 
 class GameSetModel(BaseModel):
-    owner: UserModel
+    user: UserInfoModel
     name: str
+    short_url: str
     meta: GameSetMetaModel
+
+    class Config:
+        orm_mode = True

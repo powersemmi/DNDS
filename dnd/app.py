@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from dnd.routes import health, login, pawns, register, users
+from dnd.routes import gamesets, health, login, register, users
 from dnd.settings import settings
 
 SERVICE_NAME = "DND Viewer"
@@ -34,5 +34,5 @@ def create_app():
     app.include_router(register.router, prefix=v1)
     app.include_router(login.router, prefix=v1)
     app.include_router(users.router, prefix=v1)
-    app.include_router(pawns.router, prefix=v1)
+    app.include_router(gamesets.router, prefix=v1)
     return app

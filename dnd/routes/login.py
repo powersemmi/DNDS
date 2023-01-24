@@ -8,10 +8,10 @@ from dnd.models.auth import TokenModel
 from dnd.procedures.auth import authenticate_user
 from dnd.utils.crypto import Hasher
 
-router = APIRouter(prefix="/login")
+router = APIRouter(prefix="/login", tags=["auth"])
 
 
-@router.post("/token", response_model=TokenModel, tags=["auth"])
+@router.post("/token", response_model=TokenModel)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
