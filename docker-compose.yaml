@@ -30,10 +30,10 @@ services:
         condition: service_healthy
     restart: always
     environment:
-      - BIND=0.0.0.0:8080
-      - DEBUG=False
-      - DB_URL=postgres://test:test@postgres:5432/dnd
+      - BIND=0.0.0.0:8000
+      - DEBUG=True
+      - DB_URL=postgresql+asyncpg://test:test@postgres:5432/dnd
     networks: [ shared ]
     ports:
-      - "8080:8080"
+      - "8000:8000"
     command: bash -c "python -m alembic upgrade head && python -m dnd"

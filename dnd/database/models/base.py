@@ -1,39 +1,32 @@
 from datetime import datetime
-from typing import Optional, Self, TypeAlias
 
-from sqlalchemy import TIMESTAMP, BigInteger, Column, Identity, func
-from sqlalchemy.engine import Result
+from sqlalchemy import BigInteger, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-Base: TypeAlias = declarative_base()
 
-metadata = Base.metadata
+class Base(DeclarativeBase):
+    @classmethod
+    async def _create(cls, session: AsyncSession, **kwargs):
+        obj = cls(**kwargs)
+        session.add(obj)
+        return obj
+
+    @classmethod
+    async def get(cls, session: AsyncSession, _id: int):
+        result = await session.get(cls, _id)
+        return result
 
 
 class BaseSchema(Base):
     __abstract__ = True
 
-    id: int = Column(
-        BigInteger, Identity(always=True), primary_key=True, nullable=False
-    )
-    created_at: datetime = Column(
-        TIMESTAMP(timezone=True), server_default=func.now()
-    )
-    updated_at: datetime = Column(
-        TIMESTAMP(timezone=True),
+    id = mapped_column(BigInteger, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(insert_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
         onupdate=datetime.utcnow,
     )
 
-    @classmethod
-    async def _create(cls, session: AsyncSession, **kwargs) -> Self:
-        obj = cls(**kwargs)
-        session.add(obj)
-        await session.flush()
-        return obj
 
-    @classmethod
-    async def get(cls, session: AsyncSession, _id: int) -> Optional[Self]:
-        result: Result = await session.get(cls, _id)
-        return result.scalar_one_or_none()
+metadata = Base.metadata

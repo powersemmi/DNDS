@@ -5,8 +5,7 @@ from starlette import status
 
 from dnd.database.db import get_db
 from dnd.database.models.users import User
-from dnd.models import auth
-from dnd.models.auth import TokenDataModel
+from dnd.models.auth import TokenDataModel, UserInfoModel
 from dnd.utils.crypto import Hasher
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login/token")
@@ -23,11 +22,11 @@ async def authenticate_user(
     return user
 
 
-async def get_current_user(
+async def check_user(
     token: str = Depends(oauth2_scheme),
     session: AsyncSession = Depends(get_db),
     hasher: Hasher = Depends(Hasher),
-) -> auth.UserInfoModel:
+) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -43,4 +42,9 @@ async def get_current_user(
     user = await User.get_by_username(session, username=token_data.username)
     if user is None:
         raise credentials_exception
-    return auth.UserInfoModel.from_orm(user)
+
+    return user
+
+
+async def get_current_user(user: User = Depends(check_user)) -> UserInfoModel:
+    return UserInfoModel.from_orm(user)
