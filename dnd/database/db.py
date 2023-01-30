@@ -1,5 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+import logging
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from dnd.settings import settings
 
@@ -9,13 +14,12 @@ engine = create_async_engine(
     pool_pre_ping=True,
 )
 
-async_session = sessionmaker(
-    autocommit=False,
-    autoflush=True,
+async_session = async_sessionmaker(
     bind=engine,
-    class_=AsyncSession,
     expire_on_commit=False,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def get_db() -> AsyncSession:

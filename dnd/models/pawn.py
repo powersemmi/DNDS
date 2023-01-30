@@ -1,19 +1,35 @@
-from pydantic import BaseModel
-
-from dnd.models.auth import UserModel
+from pydantic import BaseModel, Field
+from pydantic.color import Color
 
 
 class PawnMetaModel(BaseModel):
-    name: str
-    color: str
+    color: Color
+    x: int
+    y: int
 
     class Config:
         orm_mode = True
 
 
 class PawnModel(BaseModel):
-    user: UserModel
+    name: str
     meta: PawnMetaModel
 
     class Config:
         orm_mode = True
+
+
+class PawnsModel(BaseModel):
+    meta: PawnMetaModel
+
+    class Config:
+        orm_mode = True
+
+
+class PawnMetaRequestModel(BaseModel):
+    color: Color = Field(example=Color("white"))
+
+
+class PawnMoveModel(BaseModel):
+    x: int
+    y: int
