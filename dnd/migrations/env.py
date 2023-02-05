@@ -1,6 +1,8 @@
 import asyncio
+import logging
 from logging.config import fileConfig
 
+import yaml
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -32,6 +34,11 @@ target_metadata = base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+with open(settings.LOGGING_FILE, "r") as stream:
+    log_config = yaml.load(stream, Loader=yaml.FullLoader)
+
+logging.config.dictConfig(log_config)
 
 
 def run_migrations_offline():

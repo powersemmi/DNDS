@@ -26,11 +26,11 @@ license = {text = "MIT"}
 [tool.pdm]
 [tool.pdm.dev-dependencies]
 dev = [
-    "isort>=5.11.*",
+    "isort>=5.12.*",
     "pytest>=7.2.*",
-    "black>=22.12.*",
+    "black>=23.1.*",
     "flake8>=6.0.*",
-    "pyproject-flake8>=6.0.*",
+    "Flake8-pyproject>=1.2.2",
 ]
 
 [build-system]

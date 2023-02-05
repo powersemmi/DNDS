@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     BIND: str = "0.0.0.0:8080"
     DEBUG: bool = False
     WORKERS: int = 1
+    IMAGE_DIR: Path = Path("./tmp/maps")
+    ROOT_PATH: str = "/api/v1"
 
     # DB
     DB_URL: AsyncPostgresDsn
@@ -35,7 +37,9 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-with open(settings.LOGGING_FILE, 'r') as stream:
+settings.IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+with open(settings.LOGGING_FILE, "r") as stream:
     config = yaml.load(stream, Loader=yaml.FullLoader)
 
 logging.config.dictConfig(config)
