@@ -1,7 +1,5 @@
 from pydantic import BaseModel, conint
 
-from dnd.models.pawn import PawnModel
-
 
 class MapMetaLenModel(BaseModel):
     len_x: conint(ge=10, le=1000)
@@ -20,7 +18,6 @@ class MapMetaModel(MapMetaLenModel):
 class MapModel(BaseModel):
     name: str
     meta: MapMetaModel
-    pawns: list[PawnModel]
 
     class Config:
         orm_mode = True

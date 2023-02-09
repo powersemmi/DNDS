@@ -7,7 +7,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from dnd.database.models import base
+from dnd.database.schemas import base
 from dnd.settings import settings
 
 # this is the Alembic Config object, which provides

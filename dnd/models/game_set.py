@@ -16,11 +16,13 @@ class GameSetPlayerPositionModel(BaseModel):
 
 
 class GameSetMetaModel(BaseModel):
+    map: MapModel | None
+
     class Config:
         orm_mode = True
 
 
-class UserInGame(BaseModel):
+class UserInGameModel(BaseModel):
     username: constr(min_length=1, max_length=256)
     full_name: constr(min_length=1, max_length=256) | None
 
@@ -29,7 +31,7 @@ class UserInGame(BaseModel):
 
 
 class UsersInGame(BaseModel):
-    user: UserInGame
+    user: UserInGameModel
 
     class Config:
         orm_mode = True
@@ -38,8 +40,7 @@ class UsersInGame(BaseModel):
 class GameSetModel(BaseModel):
     name: str
     short_url: str
-    owner: UserInGame
-    maps: list[MapModel]
+    owner: UserInGameModel
     meta: GameSetMetaModel
     users_in_game: list[UsersInGame]
 
@@ -52,3 +53,27 @@ class GameSetsModel(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CreateGameSetMetaRequestModel(BaseModel):
+    map_name: constr(max_length=60) | None
+
+
+class UserInGameUpdateRequestModel(BaseModel):
+    username: constr(min_length=1, max_length=256)
+    full_name: constr(min_length=1, max_length=256) | None
+
+
+class CreateGameSetBodyRequestModel(BaseModel):
+    name: constr(max_length=60) | None
+    # users: UserInGameUpdateRequestModel | None
+
+
+class CreateGameSetRequestModel(BaseModel):
+    name: constr(max_length=60)
+    map_name: constr(max_length=60) | None
+
+
+class UpdateGameSetRequestModel(BaseModel):
+    body: CreateGameSetBodyRequestModel
+    meta: CreateGameSetMetaRequestModel

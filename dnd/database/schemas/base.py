@@ -1,8 +1,10 @@
 from datetime import datetime
+from typing import Any, Self
 
-from sqlalchemy import BigInteger, func
+from sqlalchemy import BigInteger, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.sql.roles import ExpressionElementRole
 
 
 class Base(DeclarativeBase):
@@ -11,6 +13,21 @@ class Base(DeclarativeBase):
         obj = cls(**kwargs)
         session.add(obj)
         return obj
+
+    @classmethod
+    async def _update(
+        cls,
+        session: AsyncSession,
+        condition: ExpressionElementRole[Any],
+        **kwargs,
+    ) -> Self | None:
+        return (
+            await session.execute(
+                update(cls)
+                .where(condition)
+                .values(**kwargs)
+            )
+        ).scalar_one_or_none()
 
     @classmethod
     async def get(cls, session: AsyncSession, _id: int):

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dnd.database.models.gamesets import GameSet
+from dnd.database.schemas.game_sets import GameSet
 
 
 @dataclass

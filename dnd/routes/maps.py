@@ -1,78 +1,59 @@
-from hashlib import md5
 from pathlib import Path
 
 from fastapi import (
     APIRouter,
     Depends,
     File,
+    Form,
     HTTPException,
     Response,
     UploadFile,
 )
 from hashids import Hashids
-from PIL import Image
-from pydantic import conint, constr
+from pydantic import constr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from dnd.database.db import get_db
-from dnd.database.models.gamesets import GameSet
-from dnd.database.models.maps import Map, MapMeta
-from dnd.database.models.users import User
+from dnd.database.schemas.maps import Map, MapMeta
+from dnd.database.schemas.users import User
 from dnd.models.map import MapModel
 from dnd.procedures.auth import check_user
-from dnd.procedures.gameset import get_current_gameset
+from dnd.procedures.maps import save_image
 from dnd.storages.images import images
 from dnd.utils.crypto import get_shortcut
 
-router = APIRouter(prefix="/map", tags=["game", "map"])
+router = APIRouter(prefix="/map", tags=["map"])
 
 
 @router.put(
-    "/{gameset_short_url}/{map_name}/",
+    "/{map_name}/",
     response_model=MapModel,
     status_code=201,
 )
 async def create_map(
-    map_name: constr(max_length=30),
-    len_x: conint(ge=10, le=1000) = 10,
-    len_y: conint(ge=10, le=1000) = 10,
-    image: UploadFile = File(media_type="image/jpg"),
-    gameset: GameSet = Depends(get_current_gameset),
+    map_name: str,
+    len_x: int = Form(10, ge=10, le=1000),
+    len_y: int = Form(10, ge=10, le=1000),
+    image: UploadFile | None = File(None, media_type="image/jpg"),
     user: User = Depends(check_user),
     session: AsyncSession = Depends(get_db),
     shortcut: Hashids = Depends(get_shortcut),
 ):
-    exists_map = await Map.get_by_name_and_gameset_id(
-        session=session, name=map_name, gameset_id=gameset.id
+    exists_map = await Map.get_by_name_and_user_id(
+        session=session, name=map_name, user_id=user.id
     )
     if exists_map:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
     new_map = await Map.create(
         session=session,
-        gameset_id=gameset.id,
         user_id=user.id,
         name=map_name,
     )
-    file_hash = md5()
-    while chunk := (await image.read(8192)):
-        file_hash.update(chunk)
-    short_url = shortcut.encode_hex(file_hash.hexdigest())
-    path = Path(images.directory)
-    path /= short_url
-    if not path.exists():
-        im = Image.open(image.file)
-        try:
-            if im.mode in ("RGBA", "P"):
-                im = im.convert("RGB")
-
-            im.save(path.absolute(), "JPEG", quality=50)
-        except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
-        finally:
-            image.file.close()
-            im.close()
+    short_url = None
+    if image:
+        short_url = await save_image(image=image, shortcut=shortcut)
 
     new_map_meta = await MapMeta.create(
         session=session,
@@ -86,20 +67,63 @@ async def create_map(
     return MapModel.from_orm(new_map)
 
 
-@router.delete("/{gameset_short_url}/{map_name}/")
+@router.patch(
+    "/{map_name}/",
+    response_model=MapModel,
+    status_code=201,
+)
+async def update_map(
+    map_name: str,
+    new_map_name: str,
+    len_x: int | None = Form(None, ge=10, le=1000),
+    len_y: int | None = Form(None, ge=10, le=1000),
+    image: UploadFile | None = File(None, media_type="image/jpg"),
+    user: User = Depends(check_user),
+    session: AsyncSession = Depends(get_db),
+    shortcut: Hashids = Depends(get_shortcut),
+):
+    exists_map = await Map.get_by_name_and_user_id(
+        session=session, name=new_map_name, user_id=user.id
+    )
+    if exists_map:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+
+    current_map = await Map.get_by_name_and_user_id(
+        session=session, name=map_name, user_id=user.id
+    )
+
+    await Map.update(
+        session=session,
+        id=current_map.id,
+        name=map_name or new_map_name,
+    )
+    short_url = None
+    if image:
+        short_url = await save_image(image=image, shortcut=shortcut)
+
+    await MapMeta.update(
+        session=session,
+        id=current_map.meta.id,
+        len_x=len_x or current_map.meta.len_x,
+        len_y=len_y or current_map.meta.len_y,
+        image_short_url=short_url or current_map.meta.image_short_url,
+    )
+    await session.flush()
+    await session.commit()
+    return MapModel.from_orm(current_map)
+
+
+@router.delete("/{map_name}/")
 async def remove_map(
     map_name: constr(max_length=30),
-    gameset: GameSet = Depends(get_current_gameset),
     user: User = Depends(check_user),
     session: AsyncSession = Depends(get_db),
 ):
-    gameset_map = await Map.get_by_name_and_gameset_id(
-        session=session, name=map_name, gameset_id=gameset.id
+    map = await Map.get_by_name_and_user_id(
+        session=session, name=map_name, user_id=user.id
     )
-    if gameset_map and (gameset.owner.id == user.id):
-        for pawn in gameset_map.pawns:
-            await session.delete(pawn)
-        await session.delete(gameset_map)
+    if map:
+        await session.delete(map)
         await session.commit()
         return Response(status_code=status.HTTP_200_OK)
     raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -119,18 +143,3 @@ async def get_map_image(
         )
     else:
         return Response(status_code=404)
-
-
-@router.get("/{gameset_short_url}/{map_name}/")
-async def get_map(
-    map_name: constr(max_length=30),
-    gameset: GameSet = Depends(get_current_gameset),
-    user: User = Depends(check_user),
-    session: AsyncSession = Depends(get_db),
-):
-    gameset_map = await Map.get_by_name_and_gameset_id(
-        session=session, name=map_name, gameset_id=gameset.id
-    )
-    if gameset_map and user:
-        return MapModel.from_orm(gameset_map)
-    raise HTTPException(404, "Map not found")

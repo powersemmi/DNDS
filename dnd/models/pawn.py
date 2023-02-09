@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PositiveInt
 from pydantic.color import Color
 
 
@@ -31,5 +31,5 @@ class PawnMetaRequestModel(BaseModel):
 
 
 class PawnMoveModel(BaseModel):
-    x: int
-    y: int
+    x: PositiveInt
+    y: PositiveInt

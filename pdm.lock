@@ -642,7 +642,7 @@ dependencies = [
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:a8c387c0e702a92f61c5a6162ea4b1ef7347f64277d2d2d8a8f0f6eaf21fc007"
+content_hash = "sha256:289bc6bfdc51bd74595729e50ebdae337073a48156882808f3faeed64466f1d1"
 
 [metadata.files]
 "aioquic 0.9.20" = [

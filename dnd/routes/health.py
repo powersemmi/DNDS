@@ -4,13 +4,12 @@ from typing import Any, Awaitable, Callable
 from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import text
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from dnd.database.db import get_db
 
-router = APIRouter(prefix="/health")
+router = APIRouter(prefix="/health", tags=["health"])
 
 
 async def default_handler(**kwargs) -> dict[str, Any]:

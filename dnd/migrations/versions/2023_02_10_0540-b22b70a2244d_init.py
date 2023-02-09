@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 7352c5d03b4c
-Revises:
-Create Date: 2023-01-28 09:41:13.967976
+Revision ID: b22b70a2244d
+Revises: 
+Create Date: 2023-02-10 05:40:13.902733
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "7352c5d03b4c"
+revision = "b22b70a2244d"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,7 +40,7 @@ def upgrade() -> None:
         op.f("ix_users_username"), "users", ["username"], unique=True
     )
     op.create_table(
-        "gamesets",
+        "game_sets",
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("short_url", sa.String(), nullable=False),
         sa.Column("owner_id", sa.BigInteger(), nullable=True),
@@ -59,29 +59,11 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        op.f("ix_gamesets_short_url"), "gamesets", ["short_url"], unique=True
-    )
-    op.create_table(
-        "gamesets_meta",
-        sa.Column("gameset_id", sa.BigInteger(), nullable=True),
-        sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(
-            ["gameset_id"],
-            ["gamesets.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
+        op.f("ix_game_sets_short_url"), "game_sets", ["short_url"], unique=True
     )
     op.create_table(
         "maps",
         sa.Column("user_id", sa.BigInteger(), nullable=False),
-        sa.Column("gameset_id", sa.BigInteger(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -92,29 +74,33 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["gameset_id"],
-            ["gamesets.id"],
-        ),
-        sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("gameset_id", "name", name="_gameset_map_uc"),
+        sa.UniqueConstraint("user_id", "name", name="_user_id_map_uc"),
     )
     op.create_table(
-        "users_in_gamesets",
-        sa.Column("user_id", sa.BigInteger(), nullable=False),
-        sa.Column("gameset_id", sa.BigInteger(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["gameset_id"],
-            ["gamesets.id"],
+        "game_sets_meta",
+        sa.Column("game_set_id", sa.BigInteger(), nullable=True),
+        sa.Column("map_id", sa.BigInteger(), nullable=True),
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
+            ["game_set_id"],
+            ["game_sets.id"],
         ),
-        sa.PrimaryKeyConstraint("user_id", "gameset_id"),
+        sa.ForeignKeyConstraint(
+            ["map_id"],
+            ["maps.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "maps_meta",
@@ -139,7 +125,7 @@ def upgrade() -> None:
     op.create_table(
         "pawns",
         sa.Column("user_id", sa.BigInteger(), nullable=True),
-        sa.Column("map_id", sa.BigInteger(), nullable=True),
+        sa.Column("game_set_id", sa.BigInteger(), nullable=True),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -150,14 +136,31 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["map_id"],
-            ["maps.id"],
+            ["game_set_id"],
+            ["game_sets.id"],
         ),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "game_set_id", "name", name="_game_set_id_pawn_uc"
+        ),
+    )
+    op.create_table(
+        "users_in_game_sets",
+        sa.Column("user_id", sa.BigInteger(), nullable=False),
+        sa.Column("game_set_id", sa.BigInteger(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["game_set_id"],
+            ["game_sets.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("user_id", "game_set_id"),
     )
     op.create_table(
         "pawns_meta",
@@ -189,13 +192,13 @@ def upgrade() -> None:
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table("pawns_meta")
+    op.drop_table("users_in_game_sets")
     op.drop_table("pawns")
     op.drop_table("maps_meta")
-    op.drop_table("users_in_gamesets")
+    op.drop_table("game_sets_meta")
     op.drop_table("maps")
-    op.drop_table("gamesets_meta")
-    op.drop_index(op.f("ix_gamesets_short_url"), table_name="gamesets")
-    op.drop_table("gamesets")
+    op.drop_index(op.f("ix_game_sets_short_url"), table_name="game_sets")
+    op.drop_table("game_sets")
     op.drop_index(op.f("ix_users_username"), table_name="users")
     op.drop_index(op.f("ix_users_email"), table_name="users")
     op.drop_table("users")

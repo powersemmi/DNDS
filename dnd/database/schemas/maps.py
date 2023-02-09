@@ -4,61 +4,55 @@ from sqlalchemy import ForeignKey, UniqueConstraint, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dnd.database.models.base import BaseSchema
+from dnd.database.schemas.base import BaseSchema
 
 if TYPE_CHECKING:
-    from dnd.database.models.gamesets import GameSet
-    from dnd.database.models.pawns import Pawn
-    from dnd.database.models.users import User
+    from dnd.database.schemas.users import User
 
 
 class Map(BaseSchema):
     __tablename__ = "maps"
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    gameset_id: Mapped[int] = mapped_column(ForeignKey("gamesets.id"))
     name: Mapped[str]
 
     user: Mapped["User"] = relationship(back_populates="maps")
-    gameset: Mapped["GameSet"] = relationship(back_populates="maps")
 
-    pawns: Mapped[list["Pawn"]] = relationship(
-        back_populates="map", lazy="immediate"
-    )
     meta: Mapped["MapMeta"] = relationship(
-        back_populates="map", lazy="immediate"
+        back_populates="map", lazy="immediate", cascade="all, delete"
     )
 
     __table_args__ = (
-        UniqueConstraint("gameset_id", "name", name="_gameset_map_uc"),
+        UniqueConstraint("user_id", "name", name="_user_id_map_uc"),
     )
+
+    @classmethod
+    async def get_by_name_and_user_id(
+        cls, session: AsyncSession, name: str, user_id: int
+    ) -> Self | None:
+        return (
+            await session.execute(
+                select(cls).where((cls.name == name), (cls.user_id == user_id))
+            )
+        ).scalar_one_or_none()
 
     @classmethod
     async def create(
         cls,
         session: AsyncSession,
-        gameset_id: int,
         user_id: int,
         name: str,
     ) -> Self:
         return await cls._create(
             session=session,
-            gameset_id=gameset_id,
             user_id=user_id,
             name=name,
-            pawns=[],
         )
 
     @classmethod
-    async def get_by_name_and_gameset_id(
-        cls, session: AsyncSession, name: str, gameset_id: int
-    ) -> Self | None:
-        return (
-            await session.execute(
-                select(cls).where(
-                    (cls.name == name), (cls.gameset_id == gameset_id)
-                )
-            )
-        ).scalar_one_or_none()
+    async def update(cls, session: AsyncSession, id: int, name: str):
+        return await cls._update(
+            session=session, condition=(cls.id == id), name=name
+        )
 
 
 class MapMeta(BaseSchema):
@@ -85,4 +79,16 @@ class MapMeta(BaseSchema):
             len_y=len_y,
             image_short_url=image_short_url,
             session=session,
+        )
+
+    @classmethod
+    async def update(
+        cls, session: AsyncSession, id: int, len_x: int, len_y, image_short_url
+    ):
+        return await cls._update(
+            session=session,
+            condition=(cls.id == id),
+            len_x=len_x,
+            len_y=len_y,
+            image_short_url=image_short_url,
         )
