@@ -23,15 +23,13 @@ class Base(DeclarativeBase):
     ) -> Self | None:
         return (
             await session.execute(
-                update(cls)
-                .where(condition)
-                .values(**kwargs)
+                update(cls).where(condition).values(**kwargs).returning(cls)
             )
         ).scalar_one_or_none()
 
     @classmethod
-    async def get(cls, session: AsyncSession, _id: int):
-        result = await session.get(cls, _id)
+    async def get(cls, session: AsyncSession, id: int):
+        result = await session.get(cls, id)
         return result
 
 

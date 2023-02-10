@@ -31,7 +31,9 @@ class Map(BaseSchema):
     ) -> Self | None:
         return (
             await session.execute(
-                select(cls).where((cls.name == name), (cls.user_id == user_id))
+                select(cls).filter(
+                    (cls.name == name), (cls.user_id == user_id)
+                )
             )
         ).scalar_one_or_none()
 

@@ -3,6 +3,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from dnd.routes import game_sets, health, login, maps, pawns, register, users
 from dnd.settings import settings
+from dnd.storages.glossary import glossary
 from dnd.storages.images import images
 
 SERVICE_NAME = "DND Viewer"
@@ -28,6 +29,7 @@ def create_app():
 
     v1 = "/api/v1"
     app.mount("/storge/maps", images, name="maps")
+    app.mount("/glossary", glossary, name="glossary")
     app.include_router(health.router)
     app.include_router(register.router, prefix=v1)
     app.include_router(login.router, prefix=v1)

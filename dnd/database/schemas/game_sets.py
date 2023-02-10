@@ -40,7 +40,7 @@ class GameSet(BaseSchema):
         name: str,
         short_url: str,
         owner_id: int,
-        game_set_id: int | None = None,
+        game_set_id: int,
     ):
         return await cls._create(
             id=game_set_id,
@@ -49,6 +49,7 @@ class GameSet(BaseSchema):
             short_url=short_url,
             session=session,
             users_in_game=[],
+            pawns=[],
         )
 
     @classmethod
@@ -97,9 +98,7 @@ class GameSetMeta(BaseSchema):
         )
 
     @classmethod
-    async def update(
-        cls, session: AsyncSession, id: int, map_id: int | None = None
-    ):
+    async def update(cls, session: AsyncSession, id: int, map_id: int | None):
         return await cls._update(
             session=session, condition=(cls.id == id), map_id=map_id
         )

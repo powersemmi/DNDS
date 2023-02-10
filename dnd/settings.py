@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     BIND: str = "0.0.0.0:8080"
     DEBUG: bool = False
     WORKERS: int = 1
-    IMAGE_DIR: Path = Path("./tmp/maps")
     ROOT_PATH: str = "/api/v1"
 
     # DB
@@ -29,6 +28,10 @@ class Settings(BaseSettings):
     # logging
     LOGGING_FILE: Path = "./logging.yaml"
 
+    # storages
+    IMAGE_DIR: Path = Path("./tmp/maps")
+    GLOSSARY_DIR: Path = Path("./glossary")
+
     @classmethod
     @validator("DB_URL", always=True)
     def set_driver_name(cls, val):
@@ -37,6 +40,7 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+settings.GLOSSARY_DIR.mkdir(parents=True, exist_ok=True)
 settings.IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 with open(settings.LOGGING_FILE, "r") as stream:

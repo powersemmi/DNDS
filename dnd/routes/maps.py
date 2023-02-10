@@ -74,7 +74,7 @@ async def create_map(
 )
 async def update_map(
     map_name: str,
-    new_map_name: str,
+    new_map_name: str | None = Form(None, max_length=60),
     len_x: int | None = Form(None, ge=10, le=1000),
     len_y: int | None = Form(None, ge=10, le=1000),
     image: UploadFile | None = File(None, media_type="image/jpg"),
@@ -95,7 +95,7 @@ async def update_map(
     await Map.update(
         session=session,
         id=current_map.id,
-        name=map_name or new_map_name,
+        name=new_map_name or map_name,
     )
     short_url = None
     if image:

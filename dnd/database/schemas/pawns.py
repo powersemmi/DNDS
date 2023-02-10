@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import TYPE_CHECKING, Self
 
 from sqlalchemy import ForeignKey, UniqueConstraint, select
@@ -12,6 +13,11 @@ if TYPE_CHECKING:
     from dnd.database.schemas.users import User
 
 
+class PawnTypeEnum(Enum):
+    movable = "movable"
+    static = "static"
+
+
 class Pawn(BaseSchema):
     __tablename__ = "pawns"
     user_id = mapped_column(ForeignKey("users.id"))
@@ -21,7 +27,7 @@ class Pawn(BaseSchema):
     game_set: Mapped["GameSet"] = relationship(back_populates="pawns")
     user: Mapped["User"] = relationship(back_populates="pawns")
     meta: Mapped["PawnMeta"] = relationship(
-        back_populates="pawn", lazy="immediate"
+        back_populates="pawn", lazy="immediate", cascade="all, delete"
     )
 
     __table_args__ = (
@@ -55,14 +61,26 @@ class Pawn(BaseSchema):
             )
         ).scalar_one_or_none()
 
+    @classmethod
+    async def update(cls, session: AsyncSession, id: int, name: str):
+        return await cls._update(
+            session=session,
+            condition=(cls.id == id),
+            name=name,
+        )
+
 
 class PawnMeta(BaseSchema):
     __tablename__ = "pawns_meta"
-    pawn_id = mapped_column(ForeignKey("pawns.id"))
-    x: Mapped[int]
-    y: Mapped[int]
-
+    visibility: Mapped[bool]
+    type: Mapped[PawnTypeEnum]
+    size_x: Mapped[int]
+    size_y: Mapped[int]
+    x: Mapped[int] = mapped_column(nullable=True)
+    y: Mapped[int] = mapped_column(nullable=True)
     color = mapped_column(ColorType, nullable=False)
+
+    pawn_id = mapped_column(ForeignKey("pawns.id"))
 
     pawn: Mapped["Pawn"] = relationship(back_populates="meta")
 
@@ -71,14 +89,41 @@ class PawnMeta(BaseSchema):
         cls,
         session: AsyncSession,
         pawn_id: int,
+        visibility: bool,
         color: hex,
-        x: int = 0,
-        y: int = 0,
+        type: PawnTypeEnum = PawnTypeEnum.movable,
+        position: tuple[int, int] | tuple[None, None] = (None, None),
+        size: tuple[int, int] = (2, 2),
     ) -> Self:
         return await cls._create(
-            id=pawn_id,
-            x=x,
-            y=y,
+            pawn_id=pawn_id,
+            visibility=visibility,
+            type=type,
+            x=position[0],
+            y=position[1],
+            size_x=size[0],
+            size_y=size[1],
             color=color,
             session=session,
+        )
+
+    @classmethod
+    async def update(
+        cls,
+        session: AsyncSession,
+        id: int,
+        visibility: bool,
+        color: hex,
+        type: PawnTypeEnum = PawnTypeEnum.movable,
+        position: tuple[int, int] | tuple[None, None] = (None, None),
+        size: tuple[int, int] = (2, 2),
+    ):
+        return await cls._update(
+            session=session,
+            condition=(cls.id == id),
+            visibility=visibility,
+            position=position,
+            color=color,
+            type=type,
+            size=size,
         )

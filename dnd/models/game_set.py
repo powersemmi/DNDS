@@ -42,6 +42,7 @@ class GameSetModel(BaseModel):
     short_url: str
     owner: UserInGameModel
     meta: GameSetMetaModel
+    pawns: list[PawnModel]
     users_in_game: list[UsersInGame]
 
     class Config:
@@ -55,18 +56,9 @@ class GameSetsModel(BaseModel):
         orm_mode = True
 
 
-class CreateGameSetMetaRequestModel(BaseModel):
-    map_name: constr(max_length=60) | None
-
-
 class UserInGameUpdateRequestModel(BaseModel):
     username: constr(min_length=1, max_length=256)
     full_name: constr(min_length=1, max_length=256) | None
-
-
-class CreateGameSetBodyRequestModel(BaseModel):
-    name: constr(max_length=60) | None
-    # users: UserInGameUpdateRequestModel | None
 
 
 class CreateGameSetRequestModel(BaseModel):
@@ -75,5 +67,6 @@ class CreateGameSetRequestModel(BaseModel):
 
 
 class UpdateGameSetRequestModel(BaseModel):
-    body: CreateGameSetBodyRequestModel
-    meta: CreateGameSetMetaRequestModel
+    name: constr(max_length=60) | None
+    map_name: constr(max_length=60) | None
+    # users: UserInGameUpdateRequestModel | None
