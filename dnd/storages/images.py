@@ -1,3 +1,5 @@
 from fastapi.staticfiles import StaticFiles
 
-images = StaticFiles(directory="storage/maps")
+from dnd.settings import settings
+
+images = StaticFiles(directory=settings.IMAGE_DIR)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from dnd.routes import gamesets, health, login, maps, pawns, register, users
+from dnd.routes import game_sets, health, login, maps, pawns, register, users
 from dnd.settings import settings
 from dnd.storages.images import images
 
@@ -32,7 +32,7 @@ def create_app():
     app.include_router(register.router, prefix=v1)
     app.include_router(login.router, prefix=v1)
     app.include_router(users.router, prefix=v1)
-    app.include_router(gamesets.router, prefix=v1)
+    app.include_router(game_sets.router, prefix=v1)
     app.include_router(maps.router, prefix=v1)
     app.include_router(pawns.router, prefix=v1)
     return app

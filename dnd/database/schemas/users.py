@@ -7,37 +7,41 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dnd.database.models.base import Base, BaseSchema
+from dnd.database.schemas.base import Base, BaseSchema
 from dnd.utils.crypto import Hasher
 
 if TYPE_CHECKING:
-    from dnd.database.models.gamesets import GameSet
-    from dnd.database.models.maps import Map
-    from dnd.database.models.pawns import Pawn
+    from dnd.database.schemas.game_sets import GameSet
+    from dnd.database.schemas.maps import Map
+    from dnd.database.schemas.pawns import Pawn
 
 hasher = Hasher()
 
 
 class UserInGameset(Base):
-    __tablename__ = "users_in_gamesets"
+    __tablename__ = "users_in_game_sets"
 
     user_id = mapped_column(ForeignKey("users.id"), primary_key=True)
-    gameset_id = mapped_column(ForeignKey("gamesets.id"), primary_key=True)
+    game_set_id = mapped_column(ForeignKey("game_sets.id"), primary_key=True)
 
-    user: Mapped["User"] = relationship(back_populates="in_games")
-    gameset: Mapped["GameSet"] = relationship(back_populates="users_in_game")
+    user: Mapped["User"] = relationship(
+        back_populates="in_games", lazy="immediate"
+    )
+    game_set: Mapped["GameSet"] = relationship(
+        back_populates="users_in_game", lazy="subquery"
+    )
 
     @classmethod
     async def create(
         cls,
         session: AsyncSession,
         user_id: int,
-        gameset_id: int,
+        game_set_id: int,
     ) -> Self:
         return await cls._create(
             session=session,
             user_id=user_id,
-            gameset_id=gameset_id,
+            game_set_id=game_set_id,
         )
 
 
@@ -50,7 +54,7 @@ class User(BaseSchema):
 
     _hashed_password = mapped_column("hashed_password", BYTEA, nullable=False)
 
-    gamesets: Mapped[list["GameSet"]] = relationship(
+    game_sets: Mapped[list["GameSet"]] = relationship(
         back_populates="owner", lazy="immediate"
     )
     maps: Mapped[list["Map"]] = relationship(

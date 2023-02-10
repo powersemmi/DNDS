@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from dnd.database.models.users import User
-from dnd.models.gameset import GameSetModel
+from dnd.database.schemas.users import User
+from dnd.models.game_set import GameSetModel
 from dnd.models.map import MapsModel
 from dnd.procedures.auth import check_user
 
@@ -15,15 +15,15 @@ async def get_user_maps(
     return MapsModel(maps=user.maps)
 
 
-@router.get("/gamesets")
-async def get_user_gamesets(
+@router.get("/game_sets")
+async def get_user_game_sets(
     user: User = Depends(check_user),
 ) -> list[GameSetModel]:
-    return [GameSetModel.from_orm(gameset) for gameset in user.gamesets]
+    return [GameSetModel.from_orm(game_set) for game_set in user.game_sets]
 
 
 @router.get("/in_games")
 async def get_user_in_games(
     user: User = Depends(check_user),
 ) -> list[GameSetModel]:
-    return [GameSetModel.from_orm(mapper.gameset) for mapper in user.in_games]
+    return [GameSetModel.from_orm(mapper.game_set) for mapper in user.in_games]

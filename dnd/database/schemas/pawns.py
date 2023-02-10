@@ -1,27 +1,31 @@
 from typing import TYPE_CHECKING, Self
 
-from sqlalchemy import ForeignKey, select
+from sqlalchemy import ForeignKey, UniqueConstraint, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ColorType
 
-from dnd.database.models.base import BaseSchema
+from dnd.database.schemas.base import BaseSchema
 
 if TYPE_CHECKING:
-    from dnd.database.models.maps import Map
-    from dnd.database.models.users import User
+    from dnd.database.schemas.game_sets import GameSet
+    from dnd.database.schemas.users import User
 
 
 class Pawn(BaseSchema):
     __tablename__ = "pawns"
     user_id = mapped_column(ForeignKey("users.id"))
-    map_id = mapped_column(ForeignKey("maps.id"))
+    game_set_id = mapped_column(ForeignKey("game_sets.id"))
     name: Mapped[str]
 
-    map: Mapped["Map"] = relationship(back_populates="pawns")
+    game_set: Mapped["GameSet"] = relationship(back_populates="pawns")
     user: Mapped["User"] = relationship(back_populates="pawns")
     meta: Mapped["PawnMeta"] = relationship(
         back_populates="pawn", lazy="immediate"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("game_set_id", "name", name="_game_set_id_pawn_uc"),
     )
 
     @classmethod
@@ -29,23 +33,25 @@ class Pawn(BaseSchema):
         cls,
         session: AsyncSession,
         name: str,
-        map_id: int,
+        game_set_id: int,
         user_id: int,
     ) -> Self:
         return await cls._create(
-            map_id=map_id,
+            game_set_id=game_set_id,
             name=name,
             user_id=user_id,
             session=session,
         )
 
     @classmethod
-    async def get_by_name_and_map_id(
-        cls, session: AsyncSession, name: str, map_id: int
+    async def get_by_name_and_game_set_id(
+        cls, session: AsyncSession, name: str, game_set_id: int
     ) -> Self | None:
         return (
             await session.execute(
-                select(cls).where((cls.name == name), (cls.map_id == map_id))
+                select(cls).where(
+                    (cls.name == name), (cls.game_set_id == game_set_id)
+                )
             )
         ).scalar_one_or_none()
 

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from dnd.database.db import get_db
-from dnd.database.models.users import User
+from dnd.database.schemas.users import User
 from dnd.models import auth
 
 router = APIRouter(prefix="/register", tags=["auth"])
