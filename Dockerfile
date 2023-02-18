@@ -26,7 +26,7 @@ WORKDIR /opt/app
 
 RUN mkdir __pypackages__ && pdm install -v --prod --no-lock --no-editable
 
-FROM builder as runner
+FROM python:3.11-slim as runner
 
 ENV PYTHONPATH=/opt/app/pkgs
 COPY --from=builder /opt/app/__pypackages__/3.11/lib /opt/app/pkgs
